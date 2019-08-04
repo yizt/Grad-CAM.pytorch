@@ -25,6 +25,7 @@ class GradCAM(object):
 
     def _get_features_hook(self, module, input, output):
         self.feature = output
+        print("feature shape:{}".format(output.size()))
 
     def _get_grads_hook(self, module, input_grad, output_grad):
         """
@@ -36,7 +37,6 @@ class GradCAM(object):
         :return:
         """
         self.gradient = output_grad[0]
-        print("gradient shape:{}".format(self.gradient.size()))
 
     def _register_hook(self):
         for (name, module) in self.net.named_modules():
