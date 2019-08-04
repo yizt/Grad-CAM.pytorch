@@ -12,7 +12,6 @@ import torch
 from torch import nn
 from torchvision import models
 import argparse
-# import matplotlib.pyplot as plt
 from skimage import io
 import cv2
 from interpretability.grad_cam import GradCAM
@@ -56,7 +55,7 @@ def get_last_conv_name(net):
     return layer_name
 
 
-def prepare_image(image):
+def prepare_input(image):
     image = image.copy()
 
     # 归一化
@@ -66,42 +65,77 @@ def prepare_image(image):
     image /= stds
 
     image = np.ascontiguousarray(np.transpose(image, (2, 0, 1)))  # channel first
-    image = torch.from_numpy(image)
-    image.unsqueeze_(0)  # 增加batch维
-    image = torch.tensor(image, requires_grad=True)
-    return image
+    image = image[np.newaxis, ...]  # 增加batch维
+
+    return torch.tensor(image, requires_grad=True)
 
 
-def save_cam(image, mask):
+def gen_cam(image, mask):
     """
-    保存CAM图
+    生成CAM图
     :param image: [H,W,C],原始图像
     :param mask: [H,W],范围0~1
-    :return:
+    :return: tuple(cam,heatmap)
     """
     # mask转为heatmap
     heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
     heatmap = np.float32(heatmap) / 255
     heatmap = heatmap[..., ::-1]  # gbr to rgb
-    io.imsave('heatmap.jpg',heatmap)
+
     # 合并heatmap到原始图像
     cam = heatmap + np.float32(image)
-    cam = cam / np.max(cam)
-    io.imsave("cam.jpg", np.uint8(255 * cam))
+    return norm_image(cam), heatmap
+
+
+def norm_image(image):
+    """
+    标准化图像
+    :param image: [H,W,C]
+    :return:
+    """
+    image = image.copy()
+    image -= np.max(np.min(image), 0)
+    image /= np.max(image)
+    image *= 255.
+    return np.uint8(image)
+
+
+def gen_gb(grad):
+    """
+    生guided back propagation 输入图像的梯度
+    :param grad: tensor,[3,H,W]
+    :return:
+    """
+    # 标准化
+    grad = grad.data.numpy()
+    gb = np.transpose(grad, (1, 2, 0))
+    return gb
 
 
 def main(args):
     img = io.imread(args.image_path)
     img = np.float32(cv2.resize(img, (224, 224))) / 255
-    inputs = prepare_image(img)
+    inputs = prepare_input(img)
 
     net = get_net(args.network, args.weight_path)
 
     layer_name = get_last_conv_name(net) if args.layer_name is None else args.layer_name
     grad_cam = GradCAM(net, layer_name)
+    mask = grad_cam(inputs, args.class_id)  # cam mask
+    print(inputs.grad)
+    cam, heatmap = gen_cam(img, mask)
+    io.imsave("cam.jpg", cam)
+    io.imsave("heatmap.jpg", heatmap)
 
-    mask = grad_cam(inputs, args.class_id)
-    save_cam(img, mask)
+    # GuidedBackPropagation
+    gbp = GuidedBackPropagation(net)
+    grad = gbp(inputs)
+    print(inputs.grad)
+    gb = gen_gb(grad)
+    io.imsave('gb.jpg', gb)
+    # 生成Guided Grad-CAM
+    cam_gb = gb * mask[..., np.newaxis]
+    io.imsave('cam_gb.jpg', norm_image(cam_gb))
 
 
 if __name__ == '__main__':
