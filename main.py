@@ -7,6 +7,7 @@ Created on 2019/8/4 上午9:53
 入口类
 
 """
+import os
 import numpy as np
 import torch
 from torch import nn
@@ -20,7 +21,7 @@ from interpretability.guided_back_propagation import GuidedBackPropagation
 
 def get_net(net_name, weight_path=None):
     """
-
+    根据网络名称获取模型
     :param net_name: 网络名称
     :param weight_path: 与训练权重路径
     :return:
@@ -112,30 +113,40 @@ def gen_gb(grad):
     return gb
 
 
+def save_image(image_dicts, input_image_name, network, output_dir):
+    prefix = os.path.splitext(input_image_name)[0]
+    for key, image in image_dicts.items():
+        io.imsave(os.path.join(output_dir, '{}-{}-{}.jpg'.format(prefix, network, key)), image)
+
+
 def main(args):
+    # 输入
     img = io.imread(args.image_path)
     img = np.float32(cv2.resize(img, (224, 224))) / 255
     inputs = prepare_input(img)
-
+    # 输出图像
+    image_dict = {}
+    # 网络
     net = get_net(args.network, args.weight_path)
-
+    # Grad-CAM
     layer_name = get_last_conv_name(net) if args.layer_name is None else args.layer_name
     grad_cam = GradCAM(net, layer_name)
     mask = grad_cam(inputs, args.class_id)  # cam mask
-    print(inputs.grad)
-    cam, heatmap = gen_cam(img, mask)
-    io.imsave("cam.jpg", cam)
-    io.imsave("heatmap.jpg", heatmap)
+
+    image_dict['cam'], image_dict['heatmap'] = gen_cam(img, mask)
 
     # GuidedBackPropagation
     gbp = GuidedBackPropagation(net)
+    inputs.grad.zero_()  # 梯度置零
     grad = gbp(inputs)
-    print(inputs.grad)
+
     gb = gen_gb(grad)
-    io.imsave('gb.jpg', gb)
+    image_dict['gb'] = gb
     # 生成Guided Grad-CAM
     cam_gb = gb * mask[..., np.newaxis]
-    io.imsave('cam_gb.jpg', norm_image(cam_gb))
+    image_dict['cam_gb'] = norm_image(cam_gb)
+
+    save_image(image_dict, os.path.basename(args.image_path), args.network, args.output_dir)
 
 
 if __name__ == '__main__':
@@ -150,6 +161,8 @@ if __name__ == '__main__':
                         help='last convolutional layer name')
     parser.add_argument('--class-id', type=int, default=None,
                         help='class id')
+    parser.add_argument('--output-dir', type=str, default='results',
+                        help='output directory to save results')
     arguments = parser.parse_args()
 
     main(arguments)
