@@ -7,6 +7,7 @@ Created on 2019/8/4 上午9:53
 入口类
 
 """
+import re
 import os
 import numpy as np
 import torch
@@ -42,7 +43,18 @@ def get_net(net_name, weight_path=None):
     else:
         raise ValueError('invalid network name:{}'.format(net_name))
     # 加载指定路径的权重参数
-    if weight_path is not None:
+    if weight_path is not None and net_name.startswith('densenet'):
+        pattern = re.compile(
+            r'^(.*denselayer\d+\.(?:norm|relu|conv))\.((?:[12])\.(?:weight|bias|running_mean|running_var))$')
+        state_dict = torch.load(weight_path)
+        for key in list(state_dict.keys()):
+            res = pattern.match(key)
+            if res:
+                new_key = res.group(1) + res.group(2)
+                state_dict[new_key] = state_dict[key]
+                del state_dict[key]
+        net.load_state_dict(state_dict)
+    elif weight_path is not None:
         net.load_state_dict(torch.load(weight_path))
     return net
 
