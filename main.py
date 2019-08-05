@@ -29,8 +29,12 @@ def get_net(net_name, weight_path=None):
     pretrain = weight_path is None  # 没有指定权重路径，则加载默认的预训练权重
     if net_name in ['vgg', 'vgg16']:
         net = models.vgg16(pretrained=pretrain)
+    elif net_name == 'vgg19':
+        net = models.vgg19(pretrained=pretrain)
     elif net_name in ['resnet', 'resnet50']:
         net = models.resnet50(pretrained=pretrain)
+    elif net_name == 'resnet101':
+        net = models.resnet101(pretrained=pretrain)
     elif net_name in ['densenet', 'densenet121']:
         net = models.densenet121(pretrained=pretrain)
     elif net_name in ['inception']:
