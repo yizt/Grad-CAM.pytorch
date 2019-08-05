@@ -136,9 +136,8 @@ def main(args):
     layer_name = get_last_conv_name(net) if args.layer_name is None else args.layer_name
     grad_cam = GradCAM(net, layer_name)
     mask = grad_cam(inputs, args.class_id)  # cam mask
-
     image_dict['cam'], image_dict['heatmap'] = gen_cam(img, mask)
-
+    grad_cam.remove_handlers()
     # GuidedBackPropagation
     gbp = GuidedBackPropagation(net)
     inputs.grad.zero_()  # 梯度置零

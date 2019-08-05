@@ -21,6 +21,7 @@ class GradCAM(object):
         self.feature = None
         self.gradient = None
         self.net.eval()
+        self.handlers = []
         self._register_hook()
 
     def _get_features_hook(self, module, input, output):
@@ -41,8 +42,12 @@ class GradCAM(object):
     def _register_hook(self):
         for (name, module) in self.net.named_modules():
             if name == self.layer_name:
-                module.register_forward_hook(self._get_features_hook)
-                module.register_backward_hook(self._get_grads_hook)
+                self.handlers.append(module.register_forward_hook(self._get_features_hook))
+                self.handlers.append(module.register_backward_hook(self._get_grads_hook))
+
+    def remove_handlers(self):
+        for handle in self.handlers:
+            handle.remove()
 
     def __call__(self, inputs, index):
         """
