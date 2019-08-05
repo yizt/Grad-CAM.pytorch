@@ -37,7 +37,7 @@ class GuidedBackPropagation(object):
         :param index: class_id
         :return:
         """
-        inputs.grad.zero_()
+        self.net.zero_grad()
         output = self.net(inputs)  # [1,num_classes]
         if index is None:
             index = np.argmax(output.cpu().data.numpy())

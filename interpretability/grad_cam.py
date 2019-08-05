@@ -51,6 +51,7 @@ class GradCAM(object):
         :param index: class id
         :return:
         """
+        self.net.zero_grad()
         output = self.net(inputs)  # [1,num_classes]
         if index is None:
             index = np.argmax(output.cpu().data.numpy())
