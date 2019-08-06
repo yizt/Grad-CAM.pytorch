@@ -1,7 +1,7 @@
 # Grad-CAM.pytorch
 ​          pytorch 实现[Grad-CAM:Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/pdf/1610.02391)
 
-![](D:\pyspace\Grad-CAM.pytorch\examples\grad-cam.jpg)
+![](examples/grad-cam.jpg)
 
 
 
