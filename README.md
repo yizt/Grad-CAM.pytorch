@@ -1,7 +1,49 @@
 # Grad-CAM.pytorch
-pytorch实现Grad-CAM,可以对任意分类网络可视化,包括自定义的网络;欢迎试用、关注并反馈问题...
+​          pytorch 实现[Grad-CAM:Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/pdf/1610.02391)
+
+![](D:\pyspace\Grad-CAM.pytorch\examples\grad-cam.jpg)
 
 
+
+## 依赖
+
+```wiki
+python 3.6.x
+pytoch 1.0.1+
+torchvision 0.2.2
+opencv-python
+matplotlib
+scikit-image
+numpy
+```
+
+
+
+## 使用方法
+
+```shell
+python main.py --image-path examples/pic1.jpg \
+               --network densenet121 \
+               --weight-path /opt/pretrained_model/densenet121-a639ec97.pth
+```
+
+**参数说明**：
+
+- image-path：需要可视化的图像路径(可选,默认`./examples/pic1.jpg`)
+
+- network: 网络名称(可选,默认`resnet50`)
+- weight-path: 网络对应的与训练参数权重路径(可选,默认从pytorch官网下载对应的预训练权重)
+- layer-name: Grad-CAM使用的层名(可选,默认最后一个卷积层)
+- class-id：Grad-CAM和Guided Back Propagation反向传播使用的类别id（可选,默认网络预测的类别)
+- output-dir：可视化结果图像保存目录(可选，默认`results`目录)
+
+
+
+## 样例
+
+![](D:\pyspace\Grad-CAM.pytorch\examples\pic1.jpg)
+
+## 结果
 
 | network      | HeatMap                                   | Grad-CAM                              | Guided backpropagation               | Guided Grad-CAM                          |
 | ------------ | ----------------------------------------- | ------------------------------------- | ------------------------------------ | ---------------------------------------- |

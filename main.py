@@ -168,7 +168,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--network', type=str, default='resnet50',
                         help='ImageNet classification network')
-    parser.add_argument('--image-path', type=str, default='./examples/pic1.png',
+    parser.add_argument('--image-path', type=str, default='./examples/pic1.jpg',
                         help='input image path')
     parser.add_argument('--weight-path', type=str, default=None,
                         help='weight path of the model')
