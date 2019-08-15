@@ -1,7 +1,21 @@
 # Grad-CAM.pytorch
-​          pytorch 实现[Grad-CAM:Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/pdf/1610.02391)
+[TOC]
+
+​          pytorch 实现[Grad-CAM:Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/pdf/1610.02391) 和
+
+[Grad-CAM++: Improved Visual Explanations for Deep Convolutional Networks](https://arxiv.org/pdf/1710.11063.pdf)
+
+
+
+**Grad-CAM整体架构**
 
 ![](examples/grad-cam.jpg)
+
+
+
+**Grad-CAM++与Grad-CAM的异同**
+
+![](examples/Grad-CAM++.png)
 
 
 
@@ -39,11 +53,15 @@ python main.py --image-path examples/pic1.jpg \
 
 
 
-## 样例
+## 样例分享
 
-![](D:\pyspace\Grad-CAM.pytorch\examples\pic1.jpg)
+### 单个对象
 
-## 结果
+**原始图像**
+
+![](/examples/pic1.jpg)
+
+**效果**
 
 | network      | HeatMap                                   | Grad-CAM                              | HeatMap++                                   | Grad-CAM++                              | Guided backpropagation               | Guided Grad-CAM                          |
 | ------------ | ----------------------------------------- | ------------------------------------- | ------------------------------------------- | --------------------------------------- | ------------------------------------ | ---------------------------------------- |
@@ -55,3 +73,29 @@ python main.py --image-path examples/pic1.jpg \
 | inception_v3 | ![](results/pic1-inception-heatmap.jpg)   | ![](results/pic1-inception-cam.jpg)   | ![](results/pic1-inception-heatmap++.jpg)   | ![](results/pic1-inception-cam++.jpg)   | ![](results/pic1-inception-gb.jpg)   | ![](results/pic1-inception-cam_gb.jpg)   |
 |              |                                           |                                       |                                             |                                         |                                      |                                          |
 
+### 多个对象
+
+​         对应多个图像Grad-CAM++比Grad-CAM覆盖要更全面一些，这也是Grad-CAM++最主要的优势
+
+**原始图像**
+
+![](/examples/multiple_dogs.jpg)
+
+**效果**
+
+| network      | HeatMap                                   | Grad-CAM                              | HeatMap++                                   | Grad-CAM++                              | Guided backpropagation               | Guided Grad-CAM                          |
+| ------------ | ----------------------------------------- | ------------------------------------- | ------------------------------------------- | --------------------------------------- | ------------------------------------ | ---------------------------------------- |
+| vgg16        | ![](results/multiple_dogs-vgg16-heatmap.jpg)       | ![](results/multiple_dogs-vgg16-cam.jpg)       | ![](results/multiple_dogs-vgg16-heatmap++.jpg)       | ![](results/multiple_dogs-vgg16-cam++.jpg)       | ![](results/multiple_dogs-vgg16-gb.jpg)       | ![](results/multiple_dogs-vgg16-cam_gb.jpg)       |
+| vgg19        | ![](results/multiple_dogs-vgg19-heatmap.jpg)       | ![](results/multiple_dogs-vgg19-cam.jpg)       | ![](results/multiple_dogs-vgg19-heatmap++.jpg)       | ![](results/multiple_dogs-vgg19-cam++.jpg)       | ![](results/multiple_dogs-vgg19-gb.jpg)       | ![](results/multiple_dogs-vgg19-cam_gb.jpg)       |
+| resnet50     | ![](results/multiple_dogs-resnet50-heatmap.jpg)    | ![](results/multiple_dogs-resnet50-cam.jpg)    | ![](results/multiple_dogs-resnet50-heatmap++.jpg)    | ![](results/multiple_dogs-resnet50-cam++.jpg)    | ![](results/multiple_dogs-resnet50-gb.jpg)    | ![](results/multiple_dogs-resnet50-cam_gb.jpg)    |
+| resnet101    | ![](results/multiple_dogs-resnet101-heatmap.jpg)   | ![](results/multiple_dogs-resnet101-cam.jpg)   | ![](results/multiple_dogs-resnet101-heatmap++.jpg)   | ![](results/multiple_dogs-resnet50-cam++.jpg)    | ![](results/multiple_dogs-resnet101-gb.jpg)   | ![](results/multiple_dogs-resnet101-cam_gb.jpg)   |
+| densenet121  | ![](results/multiple_dogs-densenet121-heatmap.jpg) | ![](results/multiple_dogs-densenet121-cam.jpg) | ![](results/multiple_dogs-densenet121-heatmap++.jpg) | ![](results/multiple_dogs-densenet121-cam++.jpg) | ![](results/multiple_dogs-densenet121-gb.jpg) | ![](results/multiple_dogs-densenet121-cam_gb.jpg) |
+| inception_v3 | ![](results/multiple_dogs-inception-heatmap.jpg)   | ![](results/multiple_dogs-inception-cam.jpg)   | ![](results/multiple_dogs-inception-heatmap++.jpg)   | ![](results/multiple_dogs-inception-cam++.jpg)   | ![](results/multiple_dogs-inception-gb.jpg)   | ![](results/multiple_dogs-inception-cam_gb.jpg)   |
+|              |                                           |                                       |                                             |                                         |                                      |                                          |
+
+ 
+
+## 总结
+
+- vgg模型的Grad-CAM并没有覆盖整个对象,相对来说resnet和denset覆盖更全,特别是densenet;从侧面说明就模型的泛化和鲁棒性而言densenet>resnet>vgg
+- Grad-CAM++相对于Grad-CAM也是覆盖对象更全面，特别是对于同一个类别有多个实例的情况下,Grad-CAM可能只覆盖部分对象，Grad-CAM++基本覆盖所有对象;但是这仅仅对于vgg而言,想densenet直接使用Grad-CAM也基本能够覆盖所有对象
