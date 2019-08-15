@@ -16,7 +16,7 @@ from torchvision import models
 import argparse
 from skimage import io
 import cv2
-from interpretability.grad_cam import GradCAM
+from interpretability.grad_cam import GradCAM, GradCamPlusPlus
 from interpretability.guided_back_propagation import GuidedBackPropagation
 
 
@@ -150,6 +150,12 @@ def main(args):
     mask = grad_cam(inputs, args.class_id)  # cam mask
     image_dict['cam'], image_dict['heatmap'] = gen_cam(img, mask)
     grad_cam.remove_handlers()
+    # Grad-CAM++
+    grad_cam_plus_plus = GradCamPlusPlus(net, layer_name)
+    mask_plus_plus = grad_cam_plus_plus(inputs, args.class_id)  # cam mask
+    image_dict['cam++'], image_dict['heatmap++'] = gen_cam(img, mask_plus_plus)
+    grad_cam_plus_plus.remove_handlers()
+
     # GuidedBackPropagation
     gbp = GuidedBackPropagation(net)
     inputs.grad.zero_()  # 梯度置零
