@@ -75,7 +75,8 @@ python main.py --image-path examples/pic1.jpg \
 | resnet101    | ![](results/pic1-resnet101-heatmap.jpg)   | ![](results/pic1-resnet101-cam.jpg)   | ![](results/pic1-resnet101-heatmap++.jpg)   | ![](results/pic1-resnet50-cam++.jpg)    | ![](results/pic1-resnet101-gb.jpg)   | ![](results/pic1-resnet101-cam_gb.jpg)   |
 | densenet121  | ![](results/pic1-densenet121-heatmap.jpg) | ![](results/pic1-densenet121-cam.jpg) | ![](results/pic1-densenet121-heatmap++.jpg) | ![](results/pic1-densenet121-cam++.jpg) | ![](results/pic1-densenet121-gb.jpg) | ![](results/pic1-densenet121-cam_gb.jpg) |
 | inception_v3 | ![](results/pic1-inception-heatmap.jpg)   | ![](results/pic1-inception-cam.jpg)   | ![](results/pic1-inception-heatmap++.jpg)   | ![](results/pic1-inception-cam++.jpg)   | ![](results/pic1-inception-gb.jpg)   | ![](results/pic1-inception-cam_gb.jpg)   |
-|              |                                           |                                       |                                             |                                         |                                      |                                          |
+| mobilenet_v2 | ![](results/pic1-mobilenet_v2-heatmap.jpg)   | ![](results/pic1-mobilenet_v2-cam.jpg)   | ![](results/pic1-mobilenet_v2-heatmap++.jpg)   | ![](results/pic1-mobilenet_v2-cam++.jpg)   | ![](results/pic1-mobilenet_v2-gb.jpg)   | ![](results/pic1-mobilenet_v2-cam_gb.jpg)   |
+| shufflenet_v2 | ![](results/pic1-shufflenet_v2-heatmap.jpg)   | ![](results/pic1-shufflenet_v2-cam.jpg)   | ![](results/pic1-shufflenet_v2-heatmap++.jpg)   | ![](results/pic1-shufflenet_v2-cam++.jpg)   | ![](results/pic1-shufflenet_v2-gb.jpg)   | ![](results/pic1-shufflenet_v2-cam_gb.jpg)   |
 
 ### 多个对象
 
@@ -95,7 +96,8 @@ python main.py --image-path examples/pic1.jpg \
 | resnet101    | ![](results/multiple_dogs-resnet101-heatmap.jpg)   | ![](results/multiple_dogs-resnet101-cam.jpg)   | ![](results/multiple_dogs-resnet101-heatmap++.jpg)   | ![](results/multiple_dogs-resnet50-cam++.jpg)    | ![](results/multiple_dogs-resnet101-gb.jpg)   | ![](results/multiple_dogs-resnet101-cam_gb.jpg)   |
 | densenet121  | ![](results/multiple_dogs-densenet121-heatmap.jpg) | ![](results/multiple_dogs-densenet121-cam.jpg) | ![](results/multiple_dogs-densenet121-heatmap++.jpg) | ![](results/multiple_dogs-densenet121-cam++.jpg) | ![](results/multiple_dogs-densenet121-gb.jpg) | ![](results/multiple_dogs-densenet121-cam_gb.jpg) |
 | inception_v3 | ![](results/multiple_dogs-inception-heatmap.jpg)   | ![](results/multiple_dogs-inception-cam.jpg)   | ![](results/multiple_dogs-inception-heatmap++.jpg)   | ![](results/multiple_dogs-inception-cam++.jpg)   | ![](results/multiple_dogs-inception-gb.jpg)   | ![](results/multiple_dogs-inception-cam_gb.jpg)   |
-|              |                                           |                                       |                                             |                                         |                                      |                                          |
+| mobilenet_v2 | ![](results/multiple_dogs-mobilenet_v2-heatmap.jpg)   | ![](results/multiple_dogs-mobilenet_v2-cam.jpg)   | ![](results/multiple_dogs-mobilenet_v2-heatmap++.jpg)   | ![](results/multiple_dogs-mobilenet_v2-cam++.jpg)   | ![](results/multiple_dogs-mobilenet_v2-gb.jpg)   | ![](results/multiple_dogs-mobilenet_v2-cam_gb.jpg)   |
+| shufflenet_v2 | ![](results/multiple_dogs-shufflenet_v2-heatmap.jpg)   | ![](results/multiple_dogs-shufflenet_v2-cam.jpg)   | ![](results/multiple_dogs-shufflenet_v2-heatmap++.jpg)   | ![](results/multiple_dogs-shufflenet_v2-cam++.jpg)   | ![](results/multiple_dogs-shufflenet_v2-gb.jpg)   | ![](results/multiple_dogs-shufflenet_v2-cam_gb.jpg)   |
 
  
 
@@ -103,3 +105,5 @@ python main.py --image-path examples/pic1.jpg \
 
 - vgg模型的Grad-CAM并没有覆盖整个对象,相对来说resnet和denset覆盖更全,特别是densenet;从侧面说明就模型的泛化和鲁棒性而言densenet>resnet>vgg
 - Grad-CAM++相对于Grad-CAM也是覆盖对象更全面，特别是对于同一个类别有多个实例的情况下,Grad-CAM可能只覆盖部分对象，Grad-CAM++基本覆盖所有对象;但是这仅仅对于vgg而言,想densenet直接使用Grad-CAM也基本能够覆盖所有对象
+- MobileNet V2的Grad-CAM覆盖也很全面
+- Inception V3和MobileNet V2的Guided backpropagation图轮廓很模糊，但是ShuffleNet V2的轮廓则比较清晰
