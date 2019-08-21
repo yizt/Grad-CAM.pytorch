@@ -40,6 +40,10 @@ def get_net(net_name, weight_path=None):
         net = models.densenet121(pretrained=pretrain)
     elif net_name in ['inception']:
         net = models.inception_v3(pretrained=pretrain)
+    elif net_name in ['mobilenet_v2']:
+        net = models.mobilenet_v2(pretrained=pretrain)
+    elif net_name in ['shufflenet_v2']:
+        net = models.shufflenet_v2_x1_0(pretrained=pretrain)
     else:
         raise ValueError('invalid network name:{}'.format(net_name))
     # 加载指定路径的权重参数
