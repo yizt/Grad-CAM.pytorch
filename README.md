@@ -84,7 +84,7 @@ python main.py --image-path examples/pic1.jpg \
 
 **原始图像**
 
-![](/examples/multiple_dogs.jpg)
+![](./examples/multiple_dogs.jpg)
 
 **效果**
 
@@ -107,3 +107,17 @@ python main.py --image-path examples/pic1.jpg \
 - Grad-CAM++相对于Grad-CAM也是覆盖对象更全面，特别是对于同一个类别有多个实例的情况下,Grad-CAM可能只覆盖部分对象，Grad-CAM++基本覆盖所有对象;但是这仅仅对于vgg而言,想densenet直接使用Grad-CAM也基本能够覆盖所有对象
 - MobileNet V2的Grad-CAM覆盖也很全面
 - Inception V3和MobileNet V2的Guided backpropagation图轮廓很模糊，但是ShuffleNet V2的轮廓则比较清晰
+
+
+
+## 目标检测
+
+​         
+
+| 原始图像                 | 检测边框                                  | Grad-CAM HeatMap                      | 边框预测类别 |
+| ------------------------ | ----------------------------------------- | ------------------------------------- | ------------ |
+| ![](./examples/pic1.jpg) | ![](./results/pic1-frcnn-predict_box.jpg) | ![](./results/pic1-frcnn-heatmap.jpg) | Dog          |
+| ![](./examples/pic2.jpg) | ![](./results/pic2-frcnn-predict_box.jpg) | ![](./results/pic2-frcnn-heatmap.jpg) | aeroplane    |
+| ![](./examples/pic3.jpg) | ![](./results/pic3-frcnn-predict_box.jpg) | ![](./results/pic3-frcnn-heatmap.jpg) | Person       |
+| ![](./examples/pic4.jpg) | ![](./results/pic4-frcnn-predict_box.jpg) | ![](./results/pic4-frcnn-heatmap.jpg) | Horse        |
+
