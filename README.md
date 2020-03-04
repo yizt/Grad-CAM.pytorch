@@ -112,7 +112,123 @@ python main.py --image-path examples/pic1.jpg \
 
 ## 目标检测
 
+​        有位网友@SHAOSIHAN问道怎样在目标检测中使用Grad-CAM;在Grad-CAM和Grad-CAM++论文中都没有提及对目标检测生成CAM图。我想主要有两个原因：
+
+a) 目标检测不同于分类，分类网络只有一个分类损失，而且所有网络都是一样的(几个类别最后一层就是几个神经元)，最后的预测输出都是单一的类别得分分布。目标检测则不同，输出都不是单一的，而且不同的网络如Faster R-CNN, CornerNet,CenterNet,FCOS，它们的建模方式不一样，输出的含义都不相同。所以不会有统一的生成Grad-CAM图的方法。
+
+b) 分类属于弱监督，通过CAM可以了解网络预测时主要关注的空间位置，也就是"看哪里"，对分析问题有实际的价值；而目标检测，本身是强监督，预测边框就直接指示了“看哪里”。
+
 ​         
+
+​        这里以detetron2中的faster-rcnn网络为例，生成Grad-CAM图。主要思路是直接获取预测分值最高的边框;将该边框的预测分值反向传播梯度到，该边框对应的proposal 边框的feature map上，生成此feature map的CAM图。
+
+
+
+### detectron2安装
+
+a) 下载
+
+```shell
+git clone https://github.com/facebookresearch/detectron2.git
+```
+
+
+
+b) 修改`detectron2/modeling/roi_heads/fast_rcnn.py`文件中的`fast_rcnn_inference_single_image`函数，主要是增加索引号，记录分值高的预测边框是由第几个proposal边框生成的；修改后的`fast_rcnn_inference_single_image`函数如下：
+
+```python
+def fast_rcnn_inference_single_image(
+        boxes, scores, image_shape, score_thresh, nms_thresh, topk_per_image
+):
+    """
+    Single-image inference. Return bounding-box detection results by thresholding
+    on scores and applying non-maximum suppression (NMS).
+
+    Args:
+        Same as `fast_rcnn_inference`, but with boxes, scores, and image shapes
+        per image.
+
+    Returns:
+        Same as `fast_rcnn_inference`, but for only one image.
+    """
+    valid_mask = torch.isfinite(boxes).all(dim=1) & torch.isfinite(scores).all(dim=1)
+    indices = torch.arange(start=0, end=scores.shape[0], dtype=int)
+    indices = indices.expand((scores.shape[1], scores.shape[0])).T
+    if not valid_mask.all():
+        boxes = boxes[valid_mask]
+        scores = scores[valid_mask]
+        indices = indices[valid_mask]
+    scores = scores[:, :-1]
+    indices = indices[:, :-1]
+
+    num_bbox_reg_classes = boxes.shape[1] // 4
+    # Convert to Boxes to use the `clip` function ...
+    boxes = Boxes(boxes.reshape(-1, 4))
+    boxes.clip(image_shape)
+    boxes = boxes.tensor.view(-1, num_bbox_reg_classes, 4)  # R x C x 4
+
+    # Filter results based on detection scores
+    filter_mask = scores > score_thresh  # R x K
+    # R' x 2. First column contains indices of the R predictions;
+    # Second column contains indices of classes.
+    filter_inds = filter_mask.nonzero()
+    if num_bbox_reg_classes == 1:
+        boxes = boxes[filter_inds[:, 0], 0]
+    else:
+        boxes = boxes[filter_mask]
+
+    scores = scores[filter_mask]
+    indices = indices[filter_mask]
+    # Apply per-class NMS
+    keep = batched_nms(boxes, scores, filter_inds[:, 1], nms_thresh)
+    if topk_per_image >= 0:
+        keep = keep[:topk_per_image]
+    boxes, scores, filter_inds = boxes[keep], scores[keep], filter_inds[keep]
+    indices = indices[keep]
+
+    result = Instances(image_shape)
+    result.pred_boxes = Boxes(boxes)
+    result.scores = scores
+    result.pred_classes = filter_inds[:, 1]
+    result.indices = indices
+    return result, filter_inds[:, 0]
+```
+
+
+
+c) 安装;如遇到问题，请参考[detectron2](https://github.com/facebookresearch/detectron2)；不同操作系统安装有差异
+
+```shell
+cd detectron2
+pip install -e .
+```
+
+
+
+### 测试
+
+a) 预训练模型下载
+
+```shell
+wget https://dl.fbaipublicfiles.com/detectron2/PascalVOC-Detection/faster_rcnn_R_50_C4/142202221/model_final_b1acc2.pkl
+```
+
+
+
+b) 测试Grad-CAM图像生成
+
+​          在本工程目录下执行如下命令
+
+```shell
+export KMP_DUPLICATE_LIB_OK=TRUE
+python detection/demo.py --config-file detection/faster_rcnn_R_50_C4.yaml \
+--input ./examples/pic1.jpg \
+--opts MODEL.WEIGHTS /Users/yizuotian/pretrained_model/model_final_b1acc2.pkl MODEL.DEVICE cpu
+```
+
+
+
+### Grad-CAM结果
 
 | 原始图像                 | 检测边框                                  | Grad-CAM HeatMap                      | 边框预测类别 |
 | ------------------------ | ----------------------------------------- | ------------------------------------- | ------------ |
@@ -120,4 +236,5 @@ python main.py --image-path examples/pic1.jpg \
 | ![](./examples/pic2.jpg) | ![](./results/pic2-frcnn-predict_box.jpg) | ![](./results/pic2-frcnn-heatmap.jpg) | aeroplane    |
 | ![](./examples/pic3.jpg) | ![](./results/pic3-frcnn-predict_box.jpg) | ![](./results/pic3-frcnn-heatmap.jpg) | Person       |
 | ![](./examples/pic4.jpg) | ![](./results/pic4-frcnn-predict_box.jpg) | ![](./results/pic4-frcnn-heatmap.jpg) | Horse        |
+
 
