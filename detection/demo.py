@@ -13,7 +13,7 @@ from detectron2.data import MetadataCatalog
 from detectron2.data.detection_utils import read_image
 from detectron2.modeling import build_model
 from detectron2.utils.logger import setup_logger
-from grad_cam import GradCAM
+from grad_cam import GradCAM, GradCamPlusPlus
 from skimage import io
 from torch import nn
 
@@ -190,12 +190,19 @@ def main(args):
     grad_cam = GradCAM(model, layer_name)
     mask, box, class_id = grad_cam(inputs)  # cam mask
     grad_cam.remove_handlers()
+
     #
     image_dict = {}
     img = original_image[..., ::-1]
     x1, y1, x2, y2 = box
     image_dict['predict_box'] = img[y1:y2, x1:x2]
     image_cam, image_dict['heatmap'] = gen_cam(img[y1:y2, x1:x2], mask)
+
+    # Grad-CAM++
+    grad_cam_plus_plus = GradCamPlusPlus(model, layer_name)
+    mask_plus_plus = grad_cam_plus_plus(inputs)  # cam mask
+    _, image_dict['heatmap++'] = gen_cam(img[y1:y2, x1:x2], mask_plus_plus)
+    grad_cam_plus_plus.remove_handlers()
 
     # 获取类别名称
     meta = MetadataCatalog.get(
@@ -204,17 +211,17 @@ def main(args):
     label = meta.thing_classes[class_id]
 
     print("label:{}".format(label))
-    # GuidedBackPropagation
-    gbp = GuidedBackPropagation(model)
-    inputs['image'].grad.zero_()  # 梯度置零
-    grad = gbp(inputs)
-    print("grad.shape:{}".format(grad.shape))
-    gb = gen_gb(grad)
-    gb = gb[y1:y2, x1:x2]
-    image_dict['gb'] = gb
-    # 生成Guided Grad-CAM
-    cam_gb = gb * mask[..., np.newaxis]
-    image_dict['cam_gb'] = norm_image(cam_gb)
+    # # GuidedBackPropagation
+    # gbp = GuidedBackPropagation(model)
+    # inputs['image'].grad.zero_()  # 梯度置零
+    # grad = gbp(inputs)
+    # print("grad.shape:{}".format(grad.shape))
+    # gb = gen_gb(grad)
+    # gb = gb[y1:y2, x1:x2]
+    # image_dict['gb'] = gb
+    # # 生成Guided Grad-CAM
+    # cam_gb = gb * mask[..., np.newaxis]
+    # image_dict['cam_gb'] = norm_image(cam_gb)
 
     save_image(image_dict, os.path.basename(path))
 
