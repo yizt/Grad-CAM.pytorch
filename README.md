@@ -233,11 +233,11 @@ python detection/demo.py --config-file detection/faster_rcnn_R_50_C4.yaml \
 
 ### Grad-CAM结果
 
-| 原始图像                 | 检测边框                                  | Grad-CAM HeatMap                      | 边框预测类别 |
-| ------------------------ | ----------------------------------------- | ------------------------------------- | ------------ |
-| ![](./examples/pic1.jpg) | ![](./results/pic1-frcnn-predict_box.jpg) | ![](./results/pic1-frcnn-heatmap.jpg) | Dog          |
-| ![](./examples/pic2.jpg) | ![](./results/pic2-frcnn-predict_box.jpg) | ![](./results/pic2-frcnn-heatmap.jpg) | aeroplane    |
-| ![](./examples/pic3.jpg) | ![](./results/pic3-frcnn-predict_box.jpg) | ![](./results/pic3-frcnn-heatmap.jpg) | Person       |
-| ![](./examples/pic4.jpg) | ![](./results/pic4-frcnn-predict_box.jpg) | ![](./results/pic4-frcnn-heatmap.jpg) | Horse        |
+| 原始图像                 | 检测边框                                  | Grad-CAM HeatMap                      | Grad-CAM++ HeatMap                      | 边框预测类别 |
+| ------------------------ | ----------------------------------------- | ------------------------------------- | --------------------------------------- | ------------ |
+| ![](./examples/pic1.jpg) | ![](./results/pic1-frcnn-predict_box.jpg) | ![](./results/pic1-frcnn-heatmap.jpg) | ![](./results/pic1-frcnn-heatmap++.jpg) | Dog          |
+| ![](./examples/pic2.jpg) | ![](./results/pic2-frcnn-predict_box.jpg) | ![](./results/pic2-frcnn-heatmap.jpg) | ![](./results/pic2-frcnn-heatmap++.jpg) | Aeroplane    |
+| ![](./examples/pic3.jpg) | ![](./results/pic3-frcnn-predict_box.jpg) | ![](./results/pic3-frcnn-heatmap.jpg) | ![](./results/pic3-frcnn-heatmap++.jpg) | Person       |
+| ![](./examples/pic4.jpg) | ![](./results/pic4-frcnn-predict_box.jpg) | ![](./results/pic4-frcnn-heatmap.jpg) | ![](./results/pic4-frcnn-heatmap++.jpg) | Horse        |
 
 
