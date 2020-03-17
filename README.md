@@ -5,14 +5,20 @@
 [Grad-CAM++: Improved Visual Explanations for Deep Convolutional Networks](https://arxiv.org/pdf/1710.11063.pdf)
 
 1. [依赖](#依赖)
+
 2. [使用方法](#使用方法)
+
 3. [样例分析](#样例分析)<br>
    3.1 [单个对象](#单个对象)<br>
    3.3 [多个对象](#多个对象)<br>
+
 4. [总结](#总结)
+
 5. [目标检测](#目标检测)<br>
    5.1 [detectron2安装](#detectron2安装)<br>
-   5.2 [测试](#测试)
+   5.2 [测试](#测试)<br>
+   5.3 [Grad-CAM结果](#Grad-CAM结果)<br>
+   5.4 [总结](#总结)
 
 **Grad-CAM整体架构**
 
@@ -241,3 +247,6 @@ python detection/demo.py --config-file detection/faster_rcnn_R_50_C4.yaml \
 | ![](./examples/pic4.jpg) | ![](./results/pic4-frcnn-predict_box.jpg) | ![](./results/pic4-frcnn-heatmap.jpg) | ![](./results/pic4-frcnn-heatmap++.jpg) | Horse        |
 
 
+### 总结
+
+​          对于目标检测Grad-CAM++的效果并没有比Grad-CAM效果好，推测目标检测中预测边框已经是单个对象了,Grad-CAM++在多个对象的情况下优于Grad-CAM
