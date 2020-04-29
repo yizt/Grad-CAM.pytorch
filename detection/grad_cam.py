@@ -66,7 +66,7 @@ class GradCAM(object):
         gradient = self.gradient[proposal_idx].cpu().data.numpy()  # [C,H,W]
         weight = np.mean(gradient, axis=(1, 2))  # [C]
 
-        feature = self.feature[0].cpu().data.numpy()  # [C,H,W]
+        feature = self.feature[proposal_idx].cpu().data.numpy()  # [C,H,W]
 
         cam = feature * weight[:, np.newaxis, np.newaxis]  # [C,H,W]
         cam = np.sum(cam, axis=0)  # [H,W]
@@ -112,7 +112,7 @@ class GradCamPlusPlus(GradCAM):
 
         weight = np.sum(gradient * alpha, axis=(1, 2))  # [C]  alpha*ReLU(gradient)
 
-        feature = self.feature[0].cpu().data.numpy()  # [C,H,W]
+        feature = self.feature[proposal_idx].cpu().data.numpy()  # [C,H,W]
 
         cam = feature * weight[:, np.newaxis, np.newaxis]  # [C,H,W]
         cam = np.sum(cam, axis=0)  # [H,W]
