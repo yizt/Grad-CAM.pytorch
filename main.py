@@ -7,15 +7,17 @@ Created on 2019/8/4 上午9:53
 入口类
 
 """
-import re
+import argparse
 import os
+import re
+
+import cv2
 import numpy as np
 import torch
+from skimage import io
 from torch import nn
 from torchvision import models
-import argparse
-from skimage import io
-import cv2
+
 from interpretability.grad_cam import GradCAM, GradCamPlusPlus
 from interpretability.guided_back_propagation import GuidedBackPropagation
 
@@ -105,7 +107,7 @@ def gen_cam(image, mask):
 
     # 合并heatmap到原始图像
     cam = heatmap + np.float32(image)
-    return norm_image(cam), heatmap
+    return norm_image(cam), (heatmap * 255).astype(np.uint8)
 
 
 def norm_image(image):
@@ -166,7 +168,7 @@ def main(args):
     grad = gbp(inputs)
 
     gb = gen_gb(grad)
-    image_dict['gb'] = gb
+    image_dict['gb'] = norm_image(gb)
     # 生成Guided Grad-CAM
     cam_gb = gb * mask[..., np.newaxis]
     image_dict['cam_gb'] = norm_image(cam_gb)
