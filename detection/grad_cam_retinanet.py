@@ -19,7 +19,7 @@ class GradCAM(object):
         self.net = net
         self.layer_name = layer_name
         self.feature = []
-        self.gradient = None
+        self.gradient = []
         self.net.eval()
         self.handlers = []
         self._register_hook()
@@ -37,7 +37,8 @@ class GradCAM(object):
         :param output_grad:tuple,长度为1
         :return:
         """
-        self.gradient = output_grad[0]
+        self.gradient.insert(0, output_grad[0])  # 梯度的顺序反的
+        print("gradient shape:{}".format(output_grad[0].size()))
 
     def _register_hook(self):
         for (name, module) in self.net.named_modules():
@@ -63,7 +64,7 @@ class GradCAM(object):
         feature_level = output[0]['instances'].feature_levels[index]  # box来自第几层feature map
         score.backward()
 
-        gradient = self.gradient[0].cpu().data.numpy()  # [C,H,W]
+        gradient = self.gradient[feature_level][0].cpu().data.numpy()  # [C,H,W]
         weight = np.mean(gradient, axis=(1, 2))  # [C]
 
         # feature_level 指feature map的层级，0去除batch维
@@ -103,7 +104,7 @@ class GradCamPlusPlus(GradCAM):
         feature_level = output[0]['instances'].feature_levels[index]  # box来自第几层feature map
         score.backward()
 
-        gradient = self.gradient[0].cpu().data.numpy()  # [C,H,W]
+        gradient = self.gradient[feature_level][0].cpu().data.numpy()  # [C,H,W]
         gradient = np.maximum(gradient, 0.)  # ReLU
         indicate = np.where(gradient > 0, 1., 0.)  # 示性函数
         norm_factor = np.sum(gradient, axis=(1, 2))  # [C]归一化
