@@ -20,7 +20,7 @@ from detectron2.data import MetadataCatalog
 from detectron2.data.detection_utils import read_image
 from detectron2.modeling import build_model
 from detectron2.utils.logger import setup_logger
-from grad_cam import GradCAM, GradCamPlusPlus
+from grad_cam_retinanet import GradCAM, GradCamPlusPlus
 from skimage import io
 from torch import nn
 
@@ -227,7 +227,7 @@ def main(args):
 if __name__ == "__main__":
     """
     Usage:export KMP_DUPLICATE_LIB_OK=TRUE
-    python detection/demo.py --config-file detection/retinanet_R_50_FPN_3x.yaml \
+    python detection/demo_retinanet.py --config-file detection/retinanet_R_50_FPN_3x.yaml \
       --input ./examples/pic1.jpg \
       --opts MODEL.WEIGHTS /Users/yizuotian/pretrained_model/model_final_4cafe0.pkl MODEL.DEVICE cpu
     """
