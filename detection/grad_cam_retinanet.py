@@ -5,6 +5,7 @@
  @Author  : yizuotian
  @Description    : retinanet GradCAM
 """
+import cv2
 import numpy as np
 
 
@@ -75,6 +76,9 @@ class GradCAM(object):
         # 数值归一化
         cam -= np.min(cam)
         cam /= np.max(cam)
+        # 缩放到输入图像尺寸
+        h, w = inputs['height'], inputs['width']
+        cam = cv2.resize(cam, (w, h))
 
         box = output[0]['instances'].pred_boxes.tensor[index].detach().numpy().astype(np.int32)
         class_id = output[0]['instances'].pred_classes[index].detach().numpy()
@@ -118,7 +122,9 @@ class GradCamPlusPlus(GradCAM):
         # 数值归一化
         cam -= np.min(cam)
         cam /= np.max(cam)
-        # resize to box scale
+        # 缩放到输入图像尺寸
+        h, w = inputs['height'], inputs['width']
+        cam = cv2.resize(cam, (w, h))
         box = output[0]['instances'].pred_boxes.tensor[index].detach().numpy().astype(np.int32)
 
         return cam, box

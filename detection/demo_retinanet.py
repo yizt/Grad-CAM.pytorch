@@ -196,7 +196,6 @@ def main(args):
     layer_name = get_last_conv_name(model)
     grad_cam = GradCAM(model, layer_name)
     mask, box, class_id = grad_cam(inputs)  # cam mask
-    mask = cv2.resize(mask, (width, height))  # cam mask 缩放到原图尺寸
     grad_cam.remove_handlers()
 
     #
@@ -209,7 +208,6 @@ def main(args):
     # Grad-CAM++
     grad_cam_plus_plus = GradCamPlusPlus(model, layer_name)
     mask_plus_plus = grad_cam_plus_plus(inputs)  # cam mask
-    mask_plus_plus = cv2.resize(mask_plus_plus, (width, height))  # cam mask 缩放到原图尺寸
     _, image_dict['heatmap++'] = gen_cam(img[y1:y2, x1:x2], mask_plus_plus[y1:y2, x1:x2])
     grad_cam_plus_plus.remove_handlers()
 
