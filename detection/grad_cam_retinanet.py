@@ -65,7 +65,7 @@ class GradCAM(object):
         gradient = self.gradient[0].cpu().data.numpy()  # [C,H,W]
         weight = np.mean(gradient, axis=(1, 2))  # [C]
 
-        # feature_level 指feature map的层级，0 去除batch 维
+        # feature_level 指feature map的层级，0去除batch维
         feature = self.feature[feature_level][0].cpu().data.numpy()  # [C,H,W]
 
         cam = feature * weight[:, np.newaxis, np.newaxis]  # [C,H,W]
@@ -79,3 +79,46 @@ class GradCAM(object):
         box = output[0]['instances'].pred_boxes.tensor[index].detach().numpy().astype(np.int32)
         class_id = output[0]['instances'].pred_classes[index].detach().numpy()
         return cam, box, class_id
+
+
+class GradCamPlusPlus(GradCAM):
+    def __init__(self, net, layer_name):
+        super(GradCamPlusPlus, self).__init__(net, layer_name)
+
+    def __call__(self, inputs, index=0):
+        """
+
+        :param inputs: {"image": [C,H,W], "height": height, "width": width}
+        :param index: 第几个边框
+        :return:
+        """
+        self.net.zero_grad()
+        output = self.net.inference([inputs])
+        print(output)
+        score = output[0]['instances'].scores[index]
+        feature_level = output[0]['instances'].feature_levels[index]  # box来自第几层feature map
+        score.backward()
+
+        gradient = self.gradient[0].cpu().data.numpy()  # [C,H,W]
+        gradient = np.maximum(gradient, 0.)  # ReLU
+        indicate = np.where(gradient > 0, 1., 0.)  # 示性函数
+        norm_factor = np.sum(gradient, axis=(1, 2))  # [C]归一化
+        for i in range(len(norm_factor)):
+            norm_factor[i] = 1. / norm_factor[i] if norm_factor[i] > 0. else 0.  # 避免除零
+        alpha = indicate * norm_factor[:, np.newaxis, np.newaxis]  # [C,H,W]
+
+        weight = np.sum(gradient * alpha, axis=(1, 2))  # [C]  alpha*ReLU(gradient)
+
+        feature = self.feature[feature_level][0].cpu().data.numpy()  # [C,H,W]
+
+        cam = feature * weight[:, np.newaxis, np.newaxis]  # [C,H,W]
+        cam = np.sum(cam, axis=0)  # [H,W]
+        # cam = np.maximum(cam, 0)  # ReLU
+
+        # 数值归一化
+        cam -= np.min(cam)
+        cam /= np.max(cam)
+        # resize to box scale
+        box = output[0]['instances'].pred_boxes.tensor[index].detach().numpy().astype(np.int32)
+
+        return cam, box
