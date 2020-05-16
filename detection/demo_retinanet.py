@@ -71,10 +71,17 @@ def gen_cam(image, mask):
     return norm_image(cam), heatmap
 
 
-def save_image(image_dicts, input_image_name, network='retinanet', output_dir='./results'):
+def save_image(image_dicts, input_image_name, layer_name, network='retinanet', output_dir='./results'):
     prefix = os.path.splitext(input_image_name)[0]
     for key, image in image_dicts.items():
-        io.imsave(os.path.join(output_dir, '{}-{}-{}.jpg'.format(prefix, network, key)), image)
+        if key == 'predict_box':
+            io.imsave(os.path.join(output_dir,
+                                   '{}-{}-{}.jpg'.format(prefix, network, key)),
+                      image)
+        else:
+            io.imsave(os.path.join(output_dir,
+                                   '{}-{}-{}-{}.jpg'.format(prefix, network, layer_name, key)),
+                      image)
 
 
 def get_parser():
@@ -104,7 +111,7 @@ def get_parser():
         default=[],
         nargs=argparse.REMAINDER,
     )
-    parser.add_argument('--layer-name', type=str, default='head.cls_subnet.0',
+    parser.add_argument('--layer-name', type=str, default='head.cls_subnet.2',
                         help='使用哪层特征去生成CAM')
     return parser
 
@@ -150,6 +157,7 @@ def main(args):
     # Grad-CAM++
     grad_cam_plus_plus = GradCamPlusPlus(model, layer_name)
     mask_plus_plus = grad_cam_plus_plus(inputs)  # cam mask
+
     _, image_dict['heatmap++'] = gen_cam(img[y1:y2, x1:x2], mask_plus_plus[y1:y2, x1:x2])
     grad_cam_plus_plus.remove_handlers()
 
@@ -161,7 +169,7 @@ def main(args):
 
     print("label:{}".format(label))
 
-    save_image(image_dict, os.path.basename(path))
+    save_image(image_dict, os.path.basename(path), args.layer_name)
 
 
 if __name__ == "__main__":
@@ -169,6 +177,7 @@ if __name__ == "__main__":
     Usage:export KMP_DUPLICATE_LIB_OK=TRUE
     python detection/demo_retinanet.py --config-file detection/retinanet_R_50_FPN_3x.yaml \
       --input ./examples/pic1.jpg \
+      --layer-name head.cls_subnet.7 \
       --opts MODEL.WEIGHTS /Users/yizuotian/pretrained_model/model_final_4cafe0.pkl MODEL.DEVICE cpu
     """
     mp.set_start_method("spawn", force=True)
