@@ -250,3 +250,189 @@ python detection/demo.py --config-file detection/faster_rcnn_R_50_C4.yaml \
 ### 总结
 
 ​          对于目标检测Grad-CAM++的效果并没有比Grad-CAM效果好，推测目标检测中预测边框已经是单个对象了,Grad-CAM++在多个对象的情况下优于Grad-CAM
+
+
+
+
+
+## 目标检测
+
+ 
+
+### detectron2安装
+
+a) 下载
+
+```shell
+git clone https://github.com/facebookresearch/detectron2.git
+```
+
+
+
+b) 修改`detectron2/modeling/meta_arch/retinanet.py` 文件中的`inference_single_image`函数，主要是增加feature level 索引，记录分值高的预测边框是由第几层feature map生成的；修改后的`inference_single_image`函数如下：
+
+```python
+    def inference_single_image(self, box_cls, box_delta, anchors, image_size):
+        """
+        Single-image inference. Return bounding-box detection results by thresholding
+        on scores and applying non-maximum suppression (NMS).
+
+        Arguments:
+            box_cls (list[Tensor]): list of #feature levels. Each entry contains
+                tensor of size (H x W x A, K)
+            box_delta (list[Tensor]): Same shape as 'box_cls' except that K becomes 4.
+            anchors (list[Boxes]): list of #feature levels. Each entry contains
+                a Boxes object, which contains all the anchors for that
+                image in that feature level.
+            image_size (tuple(H, W)): a tuple of the image height and width.
+
+        Returns:
+            Same as `inference`, but for only one image.
+        """
+        boxes_all = []
+        scores_all = []
+        class_idxs_all = []
+        feature_level_all = []
+
+        # Iterate over every feature level
+        for i, (box_cls_i, box_reg_i, anchors_i) in enumerate(zip(box_cls, box_delta, anchors)):
+            # (HxWxAxK,)
+            box_cls_i = box_cls_i.flatten().sigmoid_()
+
+            # Keep top k top scoring indices only.
+            num_topk = min(self.topk_candidates, box_reg_i.size(0))
+            # torch.sort is actually faster than .topk (at least on GPUs)
+            predicted_prob, topk_idxs = box_cls_i.sort(descending=True)
+            predicted_prob = predicted_prob[:num_topk]
+            topk_idxs = topk_idxs[:num_topk]
+
+            # filter out the proposals with low confidence score
+            keep_idxs = predicted_prob > self.score_threshold
+            predicted_prob = predicted_prob[keep_idxs]
+            topk_idxs = topk_idxs[keep_idxs]
+
+            anchor_idxs = topk_idxs // self.num_classes
+            classes_idxs = topk_idxs % self.num_classes
+
+            box_reg_i = box_reg_i[anchor_idxs]
+            anchors_i = anchors_i[anchor_idxs]
+            # predict boxes
+            predicted_boxes = self.box2box_transform.apply_deltas(box_reg_i, anchors_i.tensor)
+
+            boxes_all.append(predicted_boxes)
+            scores_all.append(predicted_prob)
+            class_idxs_all.append(classes_idxs)
+            feature_level_all.append(torch.ones_like(classes_idxs) * i)
+
+        boxes_all, scores_all, class_idxs_all, feature_level_all = [
+            cat(x) for x in [boxes_all, scores_all, class_idxs_all, feature_level_all]
+        ]
+        keep = batched_nms(boxes_all, scores_all, class_idxs_all, self.nms_threshold)
+        keep = keep[: self.max_detections_per_image]
+
+        result = Instances(image_size)
+        result.pred_boxes = Boxes(boxes_all[keep])
+        result.scores = scores_all[keep]
+        result.pred_classes = class_idxs_all[keep]
+        result.feature_levels = feature_level_all[keep]
+        return result
+```
+
+c) 修改`detectron2/modeling/meta_arch/retinanet.py` 文件增加`predict`函数，具体如下：
+
+```python
+    def predict(self, batched_inputs):
+        """
+        Args:
+            batched_inputs: a list, batched outputs of :class:`DatasetMapper` .
+                Each item in the list contains the inputs for one image.
+                For now, each item in the list is a dict that contains:
+
+                * image: Tensor, image in (C, H, W) format.
+                * instances: Instances
+
+                Other information that's included in the original dicts, such as:
+
+                * "height", "width" (int): the output resolution of the model, used in inference.
+                  See :meth:`postprocess` for details.
+        Returns:
+            dict[str: Tensor]:
+                mapping from a named loss to a tensor storing the loss. Used during training only.
+        """
+        images = self.preprocess_image(batched_inputs)
+
+        features = self.backbone(images.tensor)
+        features = [features[f] for f in self.in_features]
+        box_cls, box_delta = self.head(features)
+        anchors = self.anchor_generator(features)
+
+        results = self.inference(box_cls, box_delta, anchors, images.image_sizes)
+        processed_results = []
+        for results_per_image, input_per_image, image_size in zip(
+                results, batched_inputs, images.image_sizes
+        ):
+            height = input_per_image.get("height", image_size[0])
+            width = input_per_image.get("width", image_size[1])
+            r = detector_postprocess(results_per_image, height, width)
+            processed_results.append({"instances": r})
+        return processed_results
+```
+
+
+
+d) 安装;如遇到问题，请参考[detectron2](https://github.com/facebookresearch/detectron2)；不同操作系统安装有差异
+
+```shell
+cd detectron2
+pip install -e .
+```
+
+
+
+### 测试
+
+a) 预训练模型下载
+
+```shell
+wget https://dl.fbaipublicfiles.com/detectron2/COCO-Detection/retinanet_R_50_FPN_3x/137849486/model_final_4cafe0.pkl
+```
+
+
+
+b) 测试Grad-CAM图像生成
+
+​          在本工程目录下执行如下命令:
+
+```shell
+export KMP_DUPLICATE_LIB_OK=TRUE
+python detection/demo_retinanet.py --config-file detection/retinanet_R_50_FPN_3x.yaml \
+      --input ./examples/pic1.jpg \
+      --layer-name head.cls_subnet.7 \
+      --opts MODEL.WEIGHTS /Users/yizuotian/pretrained_model/model_final_4cafe0.pkl MODEL.DEVICE cpu
+```
+
+
+
+### Grad-CAM结果
+
+|          | 图像1                    | 图像2 | 图像3 | 图像4 |
+| -------- | ------------------------ | ----- | ----- | ----- |
+| 原图     | ![](./examples/pic1.jpg) |       |       |       |
+| 预测边框 |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+|          |                          |       |       |       |
+
