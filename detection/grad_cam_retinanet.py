@@ -57,7 +57,7 @@ class GradCAM(object):
         :return:
         """
         self.net.zero_grad()
-        output = self.net.inference([inputs])
+        output = self.net.predict([inputs])
         print(output)
         score = output[0]['instances'].scores[index]
         feature_level = output[0]['instances'].feature_levels[index]  # box来自第几层feature map
@@ -97,7 +97,7 @@ class GradCamPlusPlus(GradCAM):
         :return:
         """
         self.net.zero_grad()
-        output = self.net.inference([inputs])
+        output = self.net.predict([inputs])
         print(output)
         score = output[0]['instances'].scores[index]
         feature_level = output[0]['instances'].feature_levels[index]  # box来自第几层feature map
@@ -125,6 +125,5 @@ class GradCamPlusPlus(GradCAM):
         # 缩放到输入图像尺寸
         h, w = inputs['height'], inputs['width']
         cam = cv2.resize(cam, (w, h))
-        box = output[0]['instances'].pred_boxes.tensor[index].detach().numpy().astype(np.int32)
 
-        return cam, box
+        return cam
