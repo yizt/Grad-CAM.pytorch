@@ -121,7 +121,7 @@ python main.py --image-path examples/pic1.jpg \
 
 ## 目标检测
 
-​        有位网友@SHAOSIHAN问道怎样在目标检测中使用Grad-CAM;在Grad-CAM和Grad-CAM++论文中都没有提及对目标检测生成CAM图。我想主要有两个原因：
+​        有位网友[SHAOSIHAN](<https://github.com/SHAOSIHAN>)问道怎样在目标检测中使用Grad-CAM;在Grad-CAM和Grad-CAM++论文中都没有提及对目标检测生成CAM图。我想主要有两个原因：
 
 a) 目标检测不同于分类，分类网络只有一个分类损失，而且所有网络都是一样的(几个类别最后一层就是几个神经元)，最后的预测输出都是单一的类别得分分布。目标检测则不同，输出都不是单一的，而且不同的网络如Faster R-CNN, CornerNet,CenterNet,FCOS，它们的建模方式不一样，输出的含义都不相同。所以不会有统一的生成Grad-CAM图的方法。
 
@@ -255,9 +255,9 @@ python detection/demo.py --config-file detection/faster_rcnn_R_50_C4.yaml \
 
 
 
-## 目标检测
+## 目标检测-retinanet
 
- 
+​        在目标检测网络faster r-cnn的Grad-CAM完成后，有两位网友[**abhigoku10**](<https://github.com/abhigoku10>) 、[**wangzyon**](<https://github.com/wangzyon>)问道怎样在retinanet中实现Grad-CAM。retinanet与faster  r-cnn网络结构不同，CAM的生成也有一些差异；以下是详细的过程：
 
 ### detectron2安装
 
@@ -407,7 +407,7 @@ b) 测试Grad-CAM图像生成
 export KMP_DUPLICATE_LIB_OK=TRUE
 python detection/demo_retinanet.py --config-file detection/retinanet_R_50_FPN_3x.yaml \
       --input ./examples/pic1.jpg \
-      --layer-name head.cls_subnet.7 \
+      --layer-name head.cls_subnet.0 \
       --opts MODEL.WEIGHTS /Users/yizuotian/pretrained_model/model_final_4cafe0.pkl MODEL.DEVICE cpu
 ```
 
@@ -436,3 +436,16 @@ python detection/demo_retinanet.py --config-file detection/retinanet_R_50_FPN_3x
 | GradCAM++-cls_subnet.6 | ![](./results/pic1-retinanet-head.cls_subnet.6-heatmap++.jpg) | ![](./results/pic2-retinanet-head.cls_subnet.6-heatmap++.jpg) | ![](./results/pic3-retinanet-head.cls_subnet.6-heatmap++.jpg) | ![](./results/pic4-retinanet-head.cls_subnet.6-heatmap++.jpg) |
 | GradCAM++-cls_subnet.7 | ![](./results/pic1-retinanet-head.cls_subnet.7-heatmap++.jpg) | ![](./results/pic2-retinanet-head.cls_subnet.7-heatmap++.jpg) | ![](./results/pic3-retinanet-head.cls_subnet.7-heatmap++.jpg) | ![](./results/pic4-retinanet-head.cls_subnet.7-heatmap++.jpg) |
 
+​            
+
+注：以上分别对head.cls_subnet.0~head.cls_subnet.7共8个层生成Grad-CAM图，这8层分别对应retinanet分类子网络的4层卷积feature map及ReLu激活后的feature map
+
+
+
+### 总结
+
+a) retinanet的Grad-CAM图效果都不算好，相对来说中间层head.cls_subnet.2~head.cls_subnet.4相对好一点
+
+b) 个人认为retinanet效果不要的原因是，retinanet最后的分类是卷积层，卷积核实3\*3，也就是说反向传播到最后一个卷积层的feature map上，只有3\*3个单元有梯度。而分类网络或者faster r-cnn分类都是全连接层，感受全局信息，最后一个卷积层的feature map上所有单元都有梯度。
+
+c) 反向传播到浅层的feature map上，有梯度的单元会逐渐增加，但是就像Grad-CAM论文中说的，越浅层的feature map语义信息越弱，所以可以看到head.cls_subnet.0的CAM图效果很差。
