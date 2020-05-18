@@ -10,7 +10,7 @@
    3.1 [单个对象](#单个对象)<br>
    3.3 [多个对象](#多个对象)<br>
 4. [总结](#总结)
-5. [目标检测-faster r-cnn](#目标检测-faster r-cnn)<br>
+5. [目标检测-faster-r-cnn](#目标检测-faster-r-cnn)<br>
    5.1 [detectron2安装](#detectron2安装)<br>
    5.2 [测试](#测试)<br>
    5.3 [Grad-CAM结果](#Grad-CAM结果)<br>
@@ -120,7 +120,7 @@ python main.py --image-path examples/pic1.jpg \
 
 
 
-## 目标检测-faster r-cnn
+## 目标检测-faster-r-cnn
 
 ​        有位网友[SHAOSIHAN](<https://github.com/SHAOSIHAN>)问道怎样在目标检测中使用Grad-CAM;在Grad-CAM和Grad-CAM++论文中都没有提及对目标检测生成CAM图。我想主要有两个原因：
 
