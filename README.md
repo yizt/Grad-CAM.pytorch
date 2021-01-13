@@ -20,6 +20,11 @@
    6.2 [测试](#测试)<br>
    6.3 [Grad-CAM结果](#Grad-CAM结果)<br>
    6.4 [总结](#总结)
+7. [目标检测-fcos](#目标检测-fcos)<br>
+   7.1 [AdelaiDet安装](#AdelaiDet安装)<br>
+   7.2 [测试](#测试)<br>
+   7.3 [Grad-CAM结果](#Grad-CAM结果)<br>
+   7.4 [总结](#总结)
 
 **Grad-CAM整体架构**
 
@@ -450,3 +455,95 @@ a) retinanet的Grad-CAM图效果都不算好，相对来说中间层head.cls_sub
 b) 个人认为retinanet效果不要的原因是，retinanet最后的分类是卷积层，卷积核实3\*3，也就是说反向传播到最后一个卷积层的feature map上，只有3\*3个单元有梯度。而分类网络或者faster r-cnn分类都是全连接层，感受全局信息，最后一个卷积层的feature map上所有单元都有梯度。
 
 c) 反向传播到浅层的feature map上，有梯度的单元会逐渐增加，但是就像Grad-CAM论文中说的，越浅层的feature map语义信息越弱，所以可以看到head.cls_subnet.0的CAM图效果很差。
+
+
+
+## 目标检测-fcos
+
+​        在目标检测网络faster r-cnn和retinanet的Grad-CAM完成后，有两位网友[**linsy-ai**](<https://github.com/linsy-ai>) 问道怎样在fcos中实现Grad-CAM。fcos与retinanet基本类似，因为它们整体网络结构类似；这里使用[AdelaiDet](https://github.com/aim-uofa/AdelaiDet) 工程中的fcos网络，以下是详细的过程：
+
+### AdelaiDet安装
+
+a) 下载
+
+```shell
+git clone https://github.com/aim-uofa/AdelaiDet.git
+```
+
+b) 安装
+
+```shell
+cd AdelaiDet
+python setup.py build develop
+```
+
+ 注意：1. AdelaiDet安装依赖[detectron2](https://github.com/facebookresearch/detectron2.git),需要首先安装$\color{red}{detectron2}$
+
+​            2. fcos的不支持CPU,只支持GPU,请确保在$\color{red}{GPU环境}$下安装和测试
+
+
+
+### 测试
+
+a) 预训练模型下载
+
+```shell
+wget https://cloudstor.aarnet.edu.au/plus/s/glqFc13cCoEyHYy/download -O fcos_R_50_1x.pth
+```
+
+
+
+b) 测试Grad-CAM图像生成
+
+​          在本工程目录下执行如下命令:
+
+```shell
+export CUDA_DEVICE_ORDER="PCI_BUS_ID"
+export CUDA_VISIBLE_DEVICES="0"
+python AdelaiDet/demo_fcos.py --config-file AdelaiDet/R_50_1x.yaml \
+  --input ./examples/pic1.jpg \
+  --layer-name proposal_generator.fcos_head.cls_tower.8 \
+  --opts MODEL.WEIGHTS /path/to/fcos_R_50_1x.pth MODEL.DEVICE cuda
+```
+
+
+
+### Grad-CAM结果
+
+|                        | 图像1                                                        | 图像2                                                        | 图像3                                                        | 图像4                                                        |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 原图                   | ![](./examples/pic1.jpg)                                     | ![](./examples/pic2.jpg)                                     | ![](./examples/pic3.jpg)                                     | ![](./examples/pic4.jpg)                                     |
+| 预测边框               | ![](./results/pic1-fcos-predict_box.jpg)                | ![](./results/pic2-fcos-predict_box.jpg)                | ![](./results/pic3-fcos-predict_box.jpg)                | ![](./results/pic4-fcos-predict_box.jpg)                |
+| GradCAM-cls_tower.0   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap.jpg)  |
+| GradCAM-cls_tower.1   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap.jpg)  |
+| GradCAM-cls_tower.2   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap.jpg)  |
+| GradCAM-cls_tower.3   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap.jpg)  |
+| GradCAM-cls_tower.4   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap.jpg)  |
+| GradCAM-cls_tower.5   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap.jpg)  |
+| GradCAM-cls_tower.6   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap.jpg)  |
+| GradCAM-cls_tower.7   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap.jpg)  |
+| GradCAM-cls_tower.8   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap.jpg)  |
+| GradCAM-cls_tower.9   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap.jpg)  |
+| GradCAM-cls_tower.10   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap.jpg)  |
+| GradCAM-cls_tower.11   | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap.jpg)  | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap.jpg)  | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap.jpg)  | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap.jpg)  |
+| GradCAM++-cls_tower.0 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.0-heatmap++.jpg) |
+| GradCAM++-cls_tower.1 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.1-heatmap++.jpg) |
+| GradCAM++-cls_tower.2 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.2-heatmap++.jpg) |
+| GradCAM++-cls_tower.3 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.3-heatmap++.jpg) |
+| GradCAM++-cls_tower.4 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.4-heatmap++.jpg) |
+| GradCAM++-cls_tower.5 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.5-heatmap++.jpg) |
+| GradCAM++-cls_tower.6 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.6-heatmap++.jpg) |
+| GradCAM++-cls_tower.7 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.7-heatmap++.jpg) |
+| GradCAM++-cls_tower.8 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.8-heatmap++.jpg) |
+| GradCAM++-cls_tower.9 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.9-heatmap++.jpg) |
+| GradCAM++-cls_tower.10 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.10-heatmap++.jpg) |
+| GradCAM++-cls_tower.11 | ![](./results/pic1-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap++.jpg) | ![](./results/pic2-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap++.jpg) | ![](./results/pic3-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap++.jpg) | ![](./results/pic4-fcos-proposal_generator.fcos_head.cls_tower.11-heatmap++.jpg) |
+
+
+注：以上分别对proposal_generator.fcos_head.cls_tower..0~head.cls_subnet.11共12个层生成Grad-CAM图，这12层分别对应fcos分类子网络的4层卷积feature map、组标准化后的feature map及ReLu激活后的feature map
+
+
+
+### 总结
+
+​        不总结了，看图效果吧！ 
