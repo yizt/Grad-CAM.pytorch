@@ -177,11 +177,12 @@ def main(args):
 
 if __name__ == "__main__":
     """
-    Usage:export KMP_DUPLICATE_LIB_OK=TRUE
+    Usage:export CUDA_DEVICE_ORDER="PCI_BUS_ID"
+    export CUDA_VISIBLE_DEVICES="0"
     python AdelaiDet/demo_fcos.py --config-file AdelaiDet/R_50_1x.yaml \
       --input ./examples/pic1.jpg \
       --layer-name proposal_generator.fcos_head.cls_tower.8 \
-      --opts MODEL.WEIGHTS /sdb/tmp/pretrained_model/fcos_R_50_1x.pth MODEL.DEVICE cuda
+      --opts MODEL.WEIGHTS /path/to/fcos_R_50_1x.pth MODEL.DEVICE cuda
     """
     mp.set_start_method("spawn", force=True)
     arguments = get_parser().parse_args()
