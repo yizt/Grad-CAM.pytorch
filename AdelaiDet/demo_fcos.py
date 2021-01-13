@@ -22,7 +22,7 @@ from detectron2.modeling import build_model
 from detectron2.utils.logger import setup_logger
 from skimage import io
 
-from grad_cam_fcos import GradCAM
+from grad_cam_fcos import GradCAM, GradCamPlusPlus
 
 # constants
 WINDOW_NAME = "COCO detections"
@@ -62,13 +62,10 @@ def gen_cam(image, mask):
     :param mask: [H,W],范围0~1
     :return: tuple(cam,heatmap)
     """
-    print('max(mask):{}'.format(np.max(mask)))
     # mask转为heatmap
     heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
-    print('max(heatmap):{}'.format(np.max(heatmap)))
     # heatmap = np.float32(heatmap) / 255
     heatmap = heatmap[..., ::-1]  # bgr to rgb
-    print('max(image):{},type(image)'.format(np.max(image)), type(image))
     # 合并heatmap到原始图像
     cam = heatmap + np.float32(image)
     return norm_image(cam), heatmap
@@ -159,7 +156,13 @@ def main(args):
     x1, y1, x2, y2 = box
     image_dict['predict_box'] = img[y1:y2, x1:x2]
     image_cam, image_dict['heatmap'] = gen_cam(img[y1:y2, x1:x2], mask[y1:y2, x1:x2])
-    # image_cam, image_dict['heatmap'] = gen_cam(img, mask)
+
+    # Grad-CAM++
+    grad_cam_plus_plus = GradCamPlusPlus(model, layer_name)
+    mask_plus_plus = grad_cam_plus_plus(inputs)  # cam mask
+
+    _, image_dict['heatmap++'] = gen_cam(img[y1:y2, x1:x2], mask_plus_plus[y1:y2, x1:x2])
+    grad_cam_plus_plus.remove_handlers()
 
     save_image(image_dict, os.path.basename(path), args.layer_name)
 
