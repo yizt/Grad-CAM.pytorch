@@ -460,7 +460,7 @@ c) 反向传播到浅层的feature map上，有梯度的单元会逐渐增加，
 
 ## 目标检测-fcos
 
-​        在目标检测网络faster r-cnn和retinanet的Grad-CAM完成后，有两位网友[**linsy-ai**](<https://github.com/linsy-ai>) 问道怎样在fcos中实现Grad-CAM。fcos与retinanet基本类似，因为它们整体网络结构类似；这里使用[AdelaiDet](https://github.com/aim-uofa/AdelaiDet) 工程中的fcos网络，以下是详细的过程：
+​        在目标检测网络faster r-cnn和retinanet的Grad-CAM完成后，有位网友[**linsy-ai**](<https://github.com/linsy-ai>) 问道怎样在fcos中实现Grad-CAM。fcos与retinanet基本类似，因为它们整体网络结构类似；这里使用[AdelaiDet](https://github.com/aim-uofa/AdelaiDet) 工程中的fcos网络，以下是详细的过程：
 
 ### AdelaiDet安装
 
